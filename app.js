@@ -274,10 +274,30 @@ function generateSequences() {
   state.sequences = [];
   const mult = getDifficulty().rewardMult;
   
-  DAEMONS.forEach(daemon => {
+  // Generate sequences that can potentially overlap
+  // This makes the puzzle more strategic like the real game
+  let previousEndCode = null;
+  
+  DAEMONS.forEach((daemon, index) => {
     const seq = { ...daemon };
     seq.reward = Math.floor(daemon.reward * mult);
-    seq.codes = generateSequenceCodes(daemon.length);
+    
+    // Generate codes with chance to overlap with previous sequence
+    seq.codes = [];
+    
+    for (let i = 0; i < daemon.length; i++) {
+      // First code of V2/V3 has 50% chance to match last code of previous sequence
+      if (i === 0 && previousEndCode && Math.random() < 0.5) {
+        seq.codes.push(previousEndCode);
+      } else {
+        // Pick from codes that exist in the matrix
+        const flatMatrix = state.matrix.flat();
+        seq.codes.push(flatMatrix[Math.floor(Math.random() * flatMatrix.length)]);
+      }
+    }
+    
+    previousEndCode = seq.codes[seq.codes.length - 1];
+    
     seq.progress = 0;
     seq.completed = false;
     seq.failed = false;
@@ -445,23 +465,46 @@ function handleCellClick(row, col) {
 }
 
 function checkSequenceProgress(code) {
+  // Check each sequence to see if it appears as a contiguous substring in the buffer
+  // This is how the real game works - sequences can OVERLAP in the buffer
+  
+  const bufferStr = state.buffer.join('-');
+  
   state.sequences.forEach(seq => {
-    if (seq.completed || seq.failed) return;
+    if (seq.completed) return;
     
-    const expectedCode = seq.codes[seq.progress];
+    const seqStr = seq.codes.join('-');
     
-    if (code === expectedCode) {
-      seq.progress++;
-      
-      if (seq.progress >= seq.codes.length) {
+    // Check if sequence appears in buffer
+    if (bufferStr.includes(seqStr)) {
+      if (!seq.completed) {
         seq.completed = true;
+        seq.progress = seq.codes.length;
         state.sessionReward += seq.reward;
       }
     } else {
-      const remainingBuffer = save.bufferSize - state.buffer.length;
-      const remainingCodes = seq.codes.length - seq.progress;
+      // Update progress indicator (how many codes match from start of remaining buffer positions)
+      seq.progress = 0;
+      for (let startPos = 0; startPos < state.buffer.length; startPos++) {
+        let matchLen = 0;
+        for (let i = 0; i < seq.codes.length && (startPos + i) < state.buffer.length; i++) {
+          if (state.buffer[startPos + i] === seq.codes[i]) {
+            matchLen++;
+          } else {
+            break;
+          }
+        }
+        if (matchLen > seq.progress) {
+          seq.progress = matchLen;
+        }
+      }
       
-      if (remainingBuffer < remainingCodes) {
+      // Check if sequence is still possible
+      // It fails if there's no way to complete it with remaining buffer
+      const remainingBuffer = save.bufferSize - state.buffer.length;
+      const codesStillNeeded = seq.codes.length - seq.progress;
+      
+      if (remainingBuffer < codesStillNeeded && !seq.completed) {
         seq.failed = true;
       }
     }
