@@ -471,19 +471,17 @@ function checkSequenceProgress(code) {
   const bufferStr = state.buffer.join('-');
   
   state.sequences.forEach(seq => {
-    if (seq.completed) return;
+    if (seq.completed || seq.failed) return;
     
     const seqStr = seq.codes.join('-');
     
     // Check if sequence appears in buffer
     if (bufferStr.includes(seqStr)) {
-      if (!seq.completed) {
-        seq.completed = true;
-        seq.progress = seq.codes.length;
-        state.sessionReward += seq.reward;
-      }
+      seq.completed = true;
+      seq.progress = seq.codes.length;
+      state.sessionReward += seq.reward;
     } else {
-      // Update progress indicator (how many codes match from start of remaining buffer positions)
+      // Update progress indicator (best partial match from any position)
       seq.progress = 0;
       for (let startPos = 0; startPos < state.buffer.length; startPos++) {
         let matchLen = 0;
@@ -499,12 +497,9 @@ function checkSequenceProgress(code) {
         }
       }
       
-      // Check if sequence is still possible
-      // It fails if there's no way to complete it with remaining buffer
-      const remainingBuffer = save.bufferSize - state.buffer.length;
-      const codesStillNeeded = seq.codes.length - seq.progress;
-      
-      if (remainingBuffer < codesStillNeeded && !seq.completed) {
+      // Sequence only fails when buffer is COMPLETELY FULL and sequence not found
+      // You get as many chances as there are buffer slots
+      if (state.buffer.length >= save.bufferSize) {
         seq.failed = true;
       }
     }
