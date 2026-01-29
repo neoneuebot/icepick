@@ -658,13 +658,20 @@ function renderShop() {
     elements.shopItems.appendChild(div);
   });
   
-  // Add buy button listeners
-  document.querySelectorAll('.btn-buy[data-item]').forEach(btn => {
-    btn.addEventListener('click', () => {
+  // Add buy button listeners using event delegation to prevent duplicates
+  // Remove old listener if exists, then add new one
+  const shopItemsEl = elements.shopItems;
+  const newShopItems = shopItemsEl.cloneNode(true);
+  shopItemsEl.parentNode.replaceChild(newShopItems, shopItemsEl);
+  elements.shopItems = newShopItems;
+  
+  elements.shopItems.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-buy[data-item]');
+    if (btn && !btn.disabled) {
       const itemId = btn.dataset.item;
       const level = parseInt(btn.dataset.level);
       purchaseUpgrade(itemId, level);
-    });
+    }
   });
 }
 
@@ -742,6 +749,16 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// === Cleanup ===
+function cleanup() {
+  stopTimer();
+  // Clear any orphaned intervals
+  if (state.timerInterval) {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+  }
+}
+
 // === Initialize ===
 function init() {
   loadSave();
@@ -752,6 +769,10 @@ function init() {
   renderSequences();
   elements.timer.textContent = '00:00';
   elements.timer.classList.add('inactive');
+  
+  // Cleanup on page unload to prevent orphaned intervals
+  window.addEventListener('beforeunload', cleanup);
+  window.addEventListener('pagehide', cleanup);
 }
 
 init();
