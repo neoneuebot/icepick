@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BREACH PROTOCOL // Access Point</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="scanlines"></div>
+  
+  <div class="breach-container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="breach-title">
+        <span class="title-icon">◈</span>
+        BREACH PROTOCOL
+      </div>
+      <div class="wallet">
+        <span class="wallet-label">BALANCE</span>
+        <span class="wallet-value" id="wallet-value">€$0</span>
+      </div>
+      <div class="timer-section">
+        <span class="timer-label">BREACH TIME REMAINING</span>
+        <span class="timer-value" id="timer-value">00:00</span>
+      </div>
+    </div>
+
+    <!-- Buffer Section -->
+    <div class="buffer-section">
+      <div class="buffer-label">BUFFER <span class="buffer-size" id="buffer-size">(4 SLOTS)</span></div>
+      <div class="buffer" id="buffer"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Left: Code Matrix -->
+      <div class="matrix-section">
+        <div class="section-label">CODE MATRIX</div>
+        <div class="matrix-wrapper">
+          <div class="row-highlight" id="row-highlight"></div>
+          <div class="col-highlight" id="col-highlight"></div>
+          <div class="matrix" id="matrix"></div>
+        </div>
+      </div>
+
+      <!-- Right: Sequences -->
+      <div class="sequences-section">
+        <div class="section-label">SEQUENCE REQUIRED TO UPLOAD</div>
+        <div class="sequences" id="sequences"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-bar">
+      <div class="controls">
+        <button class="btn" id="btn-start">
+          <span class="key">ENTER</span> JACK IN
+        </button>
+        <button class="btn" id="btn-shop">
+          <span class="key">S</span> UPGRADES
+        </button>
+        <button class="btn" id="btn-exit">
+          <span class="key">ESC</span> EXIT
+        </button>
+      </div>
+      <div class="stats-preview">
+        <span class="stat-item">DIFFICULTY: <span id="difficulty-name">STANDARD</span></span>
+        <span class="stat-item">STREAK: <span id="streak-value">0</span></span>
+      </div>
+    </div>
+
+    <!-- Result Overlay -->
+    <div class="overlay" id="result-overlay">
+      <div class="overlay-content">
+        <div class="result-title" id="result-title">BREACH COMPLETE</div>
+        <div class="result-stats" id="result-stats"></div>
+        <button class="btn btn-primary" id="btn-continue">CONTINUE</button>
+      </div>
+    </div>
+
+    <!-- Shop Overlay -->
+    <div class="overlay" id="shop-overlay">
+      <div class="overlay-content shop-content">
+        <div class="shop-title">RIPPERDOC UPGRADES</div>
+        <div class="shop-balance">BALANCE: <span id="shop-balance">€$0</span></div>
+        
+        <div class="shop-items" id="shop-items">
+          <!-- Items populated by JS -->
+        </div>
+        
+        <div class="shop-stats">
+          <div class="shop-stat">Total Breaches: <span id="stat-breaches">0</span></div>
+          <div class="shop-stat">Success Rate: <span id="stat-success">0%</span></div>
+          <div class="shop-stat">Best Streak: <span id="stat-streak">0</span></div>
+        </div>
+        
+        <button class="btn" id="btn-close-shop">
+          <span class="key">ESC</span> CLOSE
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
