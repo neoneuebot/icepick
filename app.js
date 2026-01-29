@@ -70,9 +70,9 @@ const CONFIG = {
 
 // === Daemon Definitions ===
 const DAEMONS = [
-  { name: 'DATAMINE_V1', effect: 'Extract eurodollars', reward: 800, length: 3 },
-  { name: 'DATAMINE_V2', effect: 'Extract eurodollars + components', reward: 2000, length: 4 },
-  { name: 'DATAMINE_V3', effect: 'Extract eurodollars + rare components', reward: 4000, length: 4 }
+  { name: 'DATAMINE_V1', effect: 'Extract eurodollars', reward: 500, length: 2 },
+  { name: 'DATAMINE_V2', effect: 'Extract eurodollars + components', reward: 1500, length: 3 },
+  { name: 'DATAMINE_V3', effect: 'Extract rare components', reward: 3500, length: 4 }
 ];
 
 // === DOM Elements ===
@@ -286,11 +286,77 @@ function generateSequences() {
 }
 
 function generateSequenceCodes(length) {
+  // Generate a solvable sequence by simulating a valid path through the matrix
+  const size = getDifficulty().matrixSize;
   const codes = [];
-  const flatMatrix = state.matrix.flat();
+  const usedCells = new Set();
   
-  for (let i = 0; i < length; i++) {
-    codes.push(flatMatrix[Math.floor(Math.random() * flatMatrix.length)]);
+  // Start from row 0 (first selection must be from row 0)
+  let currentRow = 0;
+  let currentCol = Math.floor(Math.random() * size);
+  let selectingFromRow = true; // First real selection is from row 0
+  
+  // Pick first code from row 0
+  codes.push(state.matrix[currentRow][currentCol]);
+  usedCells.add(`${currentRow},${currentCol}`);
+  selectingFromRow = false; // Next selection will be from the column
+  
+  // Generate remaining codes following valid path
+  for (let i = 1; i < length; i++) {
+    let found = false;
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    while (!found && attempts < maxAttempts) {
+      attempts++;
+      
+      if (selectingFromRow) {
+        // Must pick from currentRow
+        const availableCols = [];
+        for (let c = 0; c < size; c++) {
+          if (!usedCells.has(`${currentRow},${c}`)) {
+            availableCols.push(c);
+          }
+        }
+        
+        if (availableCols.length > 0) {
+          currentCol = availableCols[Math.floor(Math.random() * availableCols.length)];
+          codes.push(state.matrix[currentRow][currentCol]);
+          usedCells.add(`${currentRow},${currentCol}`);
+          selectingFromRow = false;
+          found = true;
+        }
+      } else {
+        // Must pick from currentCol
+        const availableRows = [];
+        for (let r = 0; r < size; r++) {
+          if (!usedCells.has(`${r},${currentCol}`)) {
+            availableRows.push(r);
+          }
+        }
+        
+        if (availableRows.length > 0) {
+          currentRow = availableRows[Math.floor(Math.random() * availableRows.length)];
+          codes.push(state.matrix[currentRow][currentCol]);
+          usedCells.add(`${currentRow},${currentCol}`);
+          selectingFromRow = true;
+          found = true;
+        }
+      }
+      
+      // If stuck, try resetting to a different starting point
+      if (!found && attempts >= maxAttempts / 2) {
+        // Fall back to picking a code that exists somewhere reachable
+        const fallbackCode = state.matrix.flat()[Math.floor(Math.random() * size * size)];
+        codes.push(fallbackCode);
+        found = true;
+      }
+    }
+    
+    if (!found) {
+      // Ultimate fallback - just pick from matrix
+      codes.push(state.matrix.flat()[Math.floor(Math.random() * size * size)]);
+    }
   }
   
   return codes;
